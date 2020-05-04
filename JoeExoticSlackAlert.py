@@ -26,7 +26,7 @@ def COINprices(crypto):
     previous_daily_price = df_30.price_close[1]
 
     # get historical prices (90 days)
-    df_90 = pd.DataFrame(GetHistoricalPrices(crypto, days=30))
+    df_90 = pd.DataFrame(GetHistoricalPrices(crypto, days=90))
 
     # calculate percentiles
     day_1_percentile = abs(daily_price - previous_daily_price) / previous_daily_price * 100.0
@@ -38,9 +38,9 @@ def COINprices(crypto):
     percentile_formatted30 = "{:.1%}".format(day_30_percentile/100)
     percentile_formatted90 = "{:.1%}".format(day_90_percentile/100)
 
-    status = "lower" if previous_daily_price > daily_price else "higher"
+    status = "lower than" if previous_daily_price > daily_price else "higher than" if previous_daily_price < daily_price else "equal to"
 
-    message = f"{crypto} ({'${:,.2f}'.format(daily_price)}) is {status} than {percentile_formatted1} of closing prices during the last 24hrs({'${:,.2f}'.format(previous_daily_price)}), {percentile_formatted30} in the last 30 days, and {percentile_formatted90} in the last 90 days."
+    message = f"{crypto} ({'${:,.2f}'.format(daily_price)}) is {percentile_formatted1} {status} yesterdays closing price ({'${:,.2f}'.format(previous_daily_price)}),\n BTC is up {percentile_formatted30} in the last 30 days and {percentile_formatted90} in the last 90 days."
     SLACKmessage(message)
     print(message)
 
