@@ -8,12 +8,11 @@ import json
 from pycoingecko import CoinGeckoAPI
 
 cg = CoinGeckoAPI()
-slack_token = 'xoxb-1085245199701-1127572944257-p8vy5nxeic4UsWkg1sFqwHyB'
-slack_alerts_hook = 'https://hooks.slack.com/services/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'
+slack_token = '{hook}'
+slack_alerts_hook = '{token}'
 cryptos = ['bitcoin','ethereum']
 
 def GetCoinPrices(crypto):
-
     df_90 = pd.DataFrame(cg.get_price(ids=crypto, vs_currencies='usd'))
 
     current_price = df_90[crypto].usd
@@ -40,7 +39,7 @@ def GetCoinPrices(crypto):
     \n {crypto} is {GetStatus(current_price, price_30_days_ago)} {percentile_formatted30} in the last 30 days ({'${:,.2f}'.format(price_30_days_ago)}).
     \n {crypto} is {GetStatus(current_price, price_90_days_ago)} {percentile_formatted90} in the last 90 days ({'${:,.2f}'.format(price_90_days_ago)}).'''
 
-    #PushSlackMessage(MessageText)
+    PushSlackMessage(MessageText)
     print(MessageText)
 
 def PushSlackMessage(text):
@@ -53,6 +52,7 @@ def PushSlackMessage(text):
 def GetStatus(first_price, second_price):
     return "DOWN" if second_price > first_price else "UP" if second_price < first_price else "EQUAL"
 
+#get history of coin from x days ago
 def GetCoinHistory(crypto, days):
     dt = date.today() - timedelta(days)
     history = pd.DataFrame(cg.get_coin_history_by_id(crypto,dt.strftime('%d-%m-%Y')))
