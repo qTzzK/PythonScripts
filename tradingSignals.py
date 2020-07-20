@@ -8,6 +8,7 @@ sellSignalPrice = 0;
 pricesAtSignal = []
 percentChange = 5
 countPercentChange = 0
+countComparisons = 0
 
 def GetPercentageChange(current, previous):
     if current == previous:
@@ -28,11 +29,13 @@ def CalculatePercentageChange(sellToBuy):
     global sellSignalPrice
     global buySignalPrice
     global countPercentChange
+    global countComparisons
     if(sellSignalPrice != 0 and buySignalPrice != 0):
-        result = round(GetPercentageChange(buySignalPrice, sellSignalPrice),1)
+        countComparisons += 1
+        result = round(GetPercentageChange(buySignalPrice, sellSignalPrice),1) if sellToBuy else round(GetPercentageChange(sellSignalPrice, buySignalPrice),1)
         less = sellSignalPrice > buySignalPrice if sellToBuy else buySignalPrice > sellSignalPrice
         print("Percentage Change: " + ("-" if less else "+")  +  str(result) + "%\n")     
-        if(sellToBuy and less and result > percentChange or not less and result > percentChange):
+        if(sellToBuy and less and result > percentChange or not sellToBuy and not less and result > percentChange):
             countPercentChange += 1
         buySignalPrice = 0
         sellSignalPrice = 0
@@ -48,9 +51,10 @@ for (alert,price) in pricesAtSignal:
             sellSignalPrice = price
             print("Sell Signal Price: " + str(price))
         CalculatePercentageChange(False)
-print("\nBuy Signals followed by "+str(percentChange)+" percent increase: " + str(countPercentChange) + "/" + str(len(pricesAtSignal)) + "\n")
+print("\nBuy Signals followed by "+str(percentChange)+" percent increase: " + str(countPercentChange) + "/" + str(countComparisons) + "\n")
 
 countPercentChange = 0           
+countComparisons = 0
 buySignalPrice = 0
 sellSignalPrice = 0
 
@@ -64,5 +68,5 @@ for (alert,price) in pricesAtSignal:
             sellSignalPrice = price
             print("Sell Signal Price: " + str(price))
         CalculatePercentageChange(True)
-print("\nSell Signals followed by "+str(percentChange)+" percent decrease: " + str(countPercentChange) + "/" + str(len(pricesAtSignal)) + "\n")
+print("\nSell Signals followed by "+str(percentChange)+" percent decrease: " + str(countPercentChange) + "/" + str(countComparisons) + "\n")
 
