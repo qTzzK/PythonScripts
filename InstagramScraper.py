@@ -3,65 +3,77 @@ import csv
 import time
 
 email_counter = 0
-credentials = {'kamirpriv' : '7c85j47gBOvr',
-               'kamirpriv2':'qHIo55yYP24Y',
-               'kneeblaster420':'mmWEd12Gg7QA',
-               'kamirpriv5':'EOp11nS81pbe',
-               'kamirpriv6' : 'F2C5q295D0e8',
-               'kamirpriv7' : 'goZfU11UCgs5',
-               'kneeblaster421' : '0AGvjXu4wRgS',
-               'kamirpriv8': 'bv7KJ0LU3Smc'
+duplicate_email_counter = 0
+emails_collected = []
+instagram_email_csv = 'instragram_emails.csv'
+credentials = {
+
                 }
 
-def get_instagram_emails(filters):
+def email_exists(email):
+    global email_counter
+    global duplicate_email_counter
+    if(email in emails_collected):
+        duplicate_email_counter += 1
+        return True
+    else:
+        with open(instagram_email_csv, 'rt') as f:
+            reader = csv.reader(f, delimiter=',')
+            for row in reader:
+                if(len(row) >= 1):
+                    if email == row[0]:
+                        duplicate_email_counter += 1
+                        return True
+    email_counter += 1
+    return False
 
+        
+def get_instagram_emails(filters):
     global email_counter
     global api
     global rank_token
-    for filter in filters:
-            print("\nBegin grabbing emails for hashtag #" + filter)     
+    for filter in filters: 
             result = api.feed_tag(filter, rank_token)
-
+            print("\nBegin grabbing emails for hashtag #" + filter)
+            current_count = email_counter    
             for item in result['items']:
                 userName = item['user']['username']
-
-                time.sleep(5)
-
+                time.sleep(3)
                 userInfo = api.username_info(userName)
                 if 'public_email' in userInfo['user']:
                     email = userInfo['user']['public_email']
                     if(email):
-                        email_counter += 1
-                        with open('instragram_emails.csv','a', newline='') as fd:
-                            writer = csv.writer(fd)
-                            writer.writerow([email])
-                        print(email + " added from account " + userInfo['user']['username'])
+                        if(not email_exists(email)):
+                            emails_collected.append(email)
+                            with open(instagram_email_csv,'a', newline='') as fd:
+                                writer = csv.writer(fd)
+                                writer.writerow([email])
+                            print(email + " added from account " + userInfo['user']['username'])
+                        else:
+                            print(email + " - already stored")
+            if(current_count == email_counter):
+                print("\nNo unique emails found.")
+            print("\nDone collecting emails for #" + filter + ": " + str(email_counter)) 
 
-            print("\nFinished grabbing emails for hashtag #" + filter)
-            print("\nTotal emails collected: " + str(email_counter) + ". Sleeping for 1 minute before the next filter search...")
 
-            #throttle 1 minute before requesting new hashtag 
-            time.sleep(300)   
-
-instagram_hashtags = str(input("Enter instagram hashtags (CSV format) to begin collecting emails.\n"))
-hashtag_list = instagram_hashtags.split(",")
+instagram_hashtags = str(input("Enter instagram hashtags (CSV format) to begin collecting emails.\n")).split(",")
 
 #infinite loop
 while(True):
     for username,password in credentials.items():
         try:
-            print("\nInitializing Instagram client with user " + username)
+            print("\nAttempting to initialize Instagram client with user " + username + "...")
             api = Client(username, password)
             rank_token = Client.generate_uuid()
-            print("\nSuccessfully authenticated!")
-            get_instagram_emails(hashtag_list)
-        except:
-            print("\nCurrent account is throttled! \nSwitching accounts...\n")
+            get_instagram_emails(instagram_hashtags)
+        except Exception as e:
+            print(e)
+            print("\nSwitching accounts...\n")
             #continue with new user
             continue
-    print("\nAll instagram accounts have been throttled, waiting 5 minutes before trying again...")
-    print("\nTotal emails collected so far: " + email_counter)
-    time.sleep(300)
+    print("\nTotal unique emails collected so far: " + str(email_counter))
+    print("\nTotal duplicate emails found: " + str(duplicate_email_counter))
+    print("\nAll instagram accounts have been throttled, restarting...")
     
 
     
